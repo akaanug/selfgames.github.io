@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html class="dark-mode">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<head>
+    <meta charset="UTF-8">
+    <title>You have completed the game. Thank you!</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="game_page_js.html">Probabilistic Self</a>
+</nav>
+
+<h2>You have completed the <span id="game_type"></span> game. Thank you!</h2>
+<h2 id="try">Play more:</h2>
+<ul id="linkList" style="list-style-type:none; padding-right:2.5em">
+    <li><a id="logic" href="game_page_js.html?game_type=logic">Logic Game</a></li>
+    <li><a id="contingency" href="game_page_js.html?game_type=contingency">Contingency Game</a></li>
+    <li><a id="shuffle_keys" href="game_page_js.html?game_type=shuffle_keys">Switching Mappings Game</a></li>
+    <li><a id="change_agent" href="game_page_js.html?game_type=change_agent">Switching Embodiments Game</a></li>
+    <div class="dropdown-divider"></div>
+    <h2 id="try">Perturbation Tasks:</h2>
+    <li><a id="shuffle_keys" href="game_page_js.html?game_type=contingency_perturbed">Perturbed Contingency Game</a></li>
+    <li><a id="change_agent" href="game_page_js.html?game_type=change_agent_perturbed">Perturbed Switching Embodiments Game (Harder)</a></li>
+</ul>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById("game_type").textContent = params.get("game_type") || "Logic";
+    document.getElementById("total_steps").textContent = params.get("total_steps") || "0";
+</script>
+
+</body>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</html>
+
+<style>
+    .dark-mode {
+        filter: invert(1) hue-rotate(180deg);
+    }
+
+    h2 {
+        text-align: center;
+        animation-duration: 3s;
+        animation-name: slidein;
+    }
+
+    @keyframes slidein {
+      from {
+        margin-left: 100%;
+        width: 300%;
+      }
+
+      to {
+        margin-left: 0%;
+        width: 100%;
+      }
+    }
+
+
+    #linkList {
+        text-align: center;
+        animation-duration: 5s;
+        animation-name: slidein;
+    }
+
+    #try {
+        text-align: center;
+        animation-duration: 5s;
+        animation-name: slidein;
+        margin-top: 25px;
+        font-size: 21px;
+    }
+
+    #logic {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    #contingency {
+        font-size: 18px;
+        text-align: center;
+    }
+
+</style>

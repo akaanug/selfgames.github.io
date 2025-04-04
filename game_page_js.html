@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html class="dark-mode">
+
+<head>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script type="text/javascript" src="Environment.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+
+    <meta charset="UTF-8">
+    <title>Game Page</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">Probabilistic Self</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <!--<li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>-->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Play Games
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <td><a class="dropdown-item" href="game_page_js.html?game_type=logic">Logic Game</a></td>
+              <td><a class="dropdown-item" href="game_page_js.html?game_type=contingency">Contingency Game</a></td>
+              <td><a class="dropdown-item" href="game_page_js.html?game_type=shuffle_keys">Switching Mappings Game</a></td>
+              <td><a class="dropdown-item" href="game_page_js.html?game_type=change_agent">Switching Embodiments Game</a></td>
+              <div class="dropdown-divider">Perturbation Games</div>
+              <td><a class="dropdown-item" href="game_page_js.html?game_type=contingency_perturbed">Perturbed Contingency Game</a></td>
+              <td><a class="dropdown-item" href="game_page_js.html?game_type=change_agent_perturbed">Perturbed Switching Embodiments Game (Harder)</a></td>
+            </div>
+    
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              
+              <!--<div class="dropdown-divider"></div>-->
+            </div>
+          </li>
+          <!--<li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+          </li>-->
+        </ul>
+      </div>
+</nav>
+
+    <div id="wrap">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title" id="game_title">{{ game_title }} Game:</h5>
+                <h6 id="step_count" class="card-subtitle mb-2 text-muted">Current Action Count: 0</h6>
+                <h6 id="level_count" class="card-subtitle mb-2 text-muted">Level: 0</h6>
+            </div>
+        </div>
+        <div id="outer">
+            <div id="container">
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<form action="game_finished.html" type="hidden" id="finish_game" method="GET"></form>
+
+<div class="game_type" id="game_type" style="display: none;"></div>
+
+<h2>You have completed the <span id="game_type"></span> game. Thank you!</h2>
+
+<script>
+
+    let outer = document.getElementById('outer'),
+        wrapper = document.getElementById('wrap'),
+        maxWidth = screen.width,
+        maxHeight = screen.height;
+    window.addEventListener("resize", resize);
+    resize();
+
+    function resize() {
+        let scale,
+            width = window.innerWidth,
+            height = window.innerHeight,
+            isMax = width >= maxWidth && height >= (maxHeight);
+
+        console.log(width, height, maxWidth, maxHeight)
+
+        scale = Math.min(width / maxWidth, height / maxHeight);
+        console.log("Scale: " + scale)
+
+        if (scale <= 1) {
+            outer.style.transform = 'scale(' + scale + ')';
+            wrapper.style.width = isMax ? '' : maxWidth * scale;
+            wrapper.style.height = isMax ? '' : maxHeight * scale;
+        }
+
+
+        if (maxWidth <= 1000 || maxHeight <= 1000) {
+            scale = Math.min(maxWidth, maxHeight)
+        }
+    }
+
+
+     // Construct the game
+    let title = new URLSearchParams(window.location.search).get("game_type") || "logic";
+    console.log("TITLE: ", title);
+
+    // Define a mapping of game types to display titles
+    const titleMapping = {
+        "logic": "Logic",
+        "contingency": "Contingency",
+        "shuffle_keys": "Switching Mappings",
+        "change_agent": "Switching Embodiments",
+        "contingency_perturbed": "Perturbed Contingency",
+        "change_agent_perturbed": "Perturbed Switching Embodiments"
+    };
+
+    // Get the display title from the mapping or fallback to capitalized version if not found
+    const displayTitle = titleMapping[title] || (title ? title.charAt(0).toUpperCase() + title.slice(1) : "Logic");
+    document.getElementById("game_title").textContent = displayTitle + " Game:";
+
+    let game = new Game(title);
+    var markup = game.getBoard().map(row => row.map(col => `<span id="invert" class="field ${col === 8 ? "avatar" : col === 3 ? "goal" : col === 0 ? "grass" : "wall"}"></span>`).join("")).join("<span class='clear'></span>");
+    document.getElementById("container").innerHTML = markup;
+
+    function paintBoard() {
+        markup = game.getBoard().map(row => row.map(col => `<span id="invert" class="field ${col === 8 ? "avatar" : col === 3 ? "goal" : col === 0 ? "grass" : "wall"}"></span>`).join("")).join("<span class='clear'></span>");
+        document.getElementById("container").innerHTML = markup;
+    }
+
+    $(document).ready(function () {
+        document.addEventListener("keydown", keyHandler, false);
+
+        function keyHandler(event) {
+            if (game.getLevelCount() !== game.getNumLevels() && document.readyState === 'complete' && // listen only if document is loaded
+                (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd'
+                    || event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'ArrowLeft' ||
+                    event.key === 'ArrowRight')) { // move
+                let tmp;
+                switch (event.key) {
+                    case "w":
+                        tmp = 0;
+                        break;
+                    case "s":
+                        tmp = 1;
+                        break;
+                    case "a":
+                        tmp = 2;
+                        break;
+                    case "d":
+                        tmp = 3;
+                        break;
+                    case "ArrowUp":
+                        tmp = 0;
+                        break;
+                    case "ArrowDown":
+                        tmp = 1;
+                        break;
+                    case "ArrowLeft":
+                        tmp = 2;
+                        break;
+                    case "ArrowRight":
+                        tmp = 3;
+                        break;
+                }
+
+                game.move(tmp);
+                document.getElementById("step_count").textContent = "Current Action Count: " + game.getCurrentActionCount();
+                document.getElementById("level_count").textContent = "Level: " + game.getLevelCount();
+                paintBoard();
+                if (game.getLevelCount() === game.getNumLevels()) {
+                    let data = game.getData();
+                    console.log(data);
+                    var form = document.getElementById("finish_game");
+                    form.action = form.action.replace("-----", data["data"]["steps"].reduce((a, b) => a + b, 0));
+                    form.action = form.action.replace("0000", data["data"]["game_type"]);
+                    form.submit();
+                }
+            }
+        }
+    });
+
+    window.addEventListener('container', function () {
+        //document.documentElement.classList.toggle('dark-mode');
+        document.getElementsByTagName("path")[0].style = "#000000";
+        document.getElementById("gameArea").className = "inverted";
+
+        document.querySelectorAll('.inverted').forEach((result) => {
+            result.classList.toggle('invert');
+        });
+    })
+
+    const params = new URLSearchParams(window.location.search);
+    document.getElementById("game_type").textContent = params.get("game_type") || "Logic";
+    document.getElementById("total_steps").textContent = params.get("total_steps") || "0";
+</script>
+
+
+<style>
+    .card {
+        width: 400px;
+    }
+
+    .center {
+        margin: auto;
+        width: 50%;
+        padding: 10px;
+    }
+
+    #container {
+        margin: auto;
+        padding: 20px;
+        height: 100vh;
+        width: 100vh;
+        overflow: hidden;
+        filter: invert(1) hue-rotate(180deg);
+    }
+
+    .field {
+        float: left;
+        height: 4%;
+        width: 4%;
+    }
+
+    .clear {
+        clear: both;
+        float: left;
+    }
+
+    .grass {
+        background: gray;
+    }
+
+    .wall {
+        background: black;
+    }
+
+    .avatar {
+        background: red;
+    }
+
+    .goal {
+        background: green;
+    }
+
+
+    #wrap {
+
+        width: 100vh;
+        height: 100vh;
+        margin: 0 auto;
+    }
+
+    #outer {
+        width: 100vh;
+        height: 100vh;
+        transform-origin: 0 0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    #outer:before {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        height: 10px;
+    }
+
+    #content div:last-child {
+        font-size: 15px;
+        opacity: 0.7;
+    }
+
+</style>
+
+
+<style>
+
+    .dark-mode {
+        filter: invert(1) hue-rotate(180deg);
+    }
+
+    .invert {
+        filter: invert(1) hue-rotate(180deg);
+        margin: auto;
+        position: fixed;
+        left: 10%;
+        transform-origin: left center;
+    }
+
+    .card {
+        outline: None;
+        border-style: none !important;
+    }
+
+    svg {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        position: fixed;
+
+        width: 100%;
+        height: 100%;
+    }
+
+
+</style>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+
+</html>
